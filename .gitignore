@@ -1,0 +1,61 @@
+# Python cache / bytecode
+__pycache__/
+*.py[cod]
+*.pyo
+*.pyd
+*.pkl
+*.log
+
+# Virtual environments
+.venv/
+venv/
+env/
+
+# Jupyter / notebooks
+.ipynb_checkpoints/
+*.ipynb
+
+# IDEs / Editors
+.vscode/
+.idea/
+*.swp
+
+# OS files
+.DS_Store
+Thumbs.db
+
+# Build / packaging
+*.egg-info/
+dist/
+build/
+.eggs/
+
+# Environment / secrets
+.env
+.env.local
+.env.*.local
+*.pem
+*.key
+
+# Data / cache
+*.db
+*.sqlite
+*.sqlite3
+*.vec
+*.csv
+*.tsv
+*.parquet
+*.jsonl
+.cache/
+logs/
+checkpoints/
+outputs/
+
+# Model weights / artifacts (keep small, download at runtime)
+*.bin
+*.pt
+*.h5
+*.ckpt
+
+# FastAPI / Uvicorn reload artifacts
+*.pid
