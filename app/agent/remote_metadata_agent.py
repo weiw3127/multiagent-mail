@@ -15,7 +15,6 @@ structured_model = model.with_structured_output(ModelOutput)
 
 def run(metadata: Dict[str, Any]):
     
-
     sys = SystemMessage(
         content=("""
         You are a cybersecurity expert specializing in phishing, with a particular focus on email contents. 

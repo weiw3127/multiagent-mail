@@ -126,8 +126,10 @@ class EmailOrchestrator:
         )
 
         g.add_edge("remote_start", "remote_text")
-        g.add_edge("remote_text", "remote_url")
-        g.add_edge("remote_url", "remote_metadata")
+        g.add_edge("remote_start", "remote_url")
+        g.add_edge("remote_start", "remote_metadata")
+        g.add_edge("remote_text", "remote_aggregate")
+        g.add_edge("remote_url", "remote_aggregate")
         g.add_edge("remote_metadata", "remote_aggregate")
 
         g.add_edge("remote_aggregate", "finalize")
