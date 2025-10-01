@@ -1,0 +1,1 @@
+EMAIL_THRESHOLD = .5
