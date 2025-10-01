@@ -1,9 +1,9 @@
 # email_remote_text_agent.py
 from typing import List
-from langchain_core.messages import SystemMessage, HumanMessage
+from langchain_core.messages import HumanMessage, SystemMessage
 #from langchain_anthropic import ChatAnthropic
 from langchain_google_genai import ChatGoogleGenerativeAI
-from schema import ModelOutput
+from app.schema import ModelOutput
 
 model = ChatGoogleGenerativeAI(
     model="gemini-2.5-flash",
@@ -22,5 +22,6 @@ def run(subject: str, content: str) -> ModelOutput:
             "where score≈likelihood of phishing."
         )
     )
-    content=f"Subject:\n{subject}\n\nBody:\n{content}"
-    return structured.invoke([sys, content])
+    human = HumanMessage(content=f"Subject:\n{subject}\n\nBody:\n{content}")
+    
+    return structured.invoke([sys, human])

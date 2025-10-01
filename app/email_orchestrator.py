@@ -1,27 +1,27 @@
 from dataclasses import dataclass, field
 from typing import Any, Dict, List, Literal
 
-from langgraph.graph import StateGraph, END
-from app.schema import EmailGraphState, FinalDecision, AgentOutput
-
+from langgraph.graph import END, StateGraph
 from app.agent import (
     local_text_agent,
     local_url_agent,
+    remote_metadata_agent,
     remote_text_agent,
     remote_url_agent,
-    remote_metadata_agent,
 )
-from app.util import decide, html_to_text, extract_urls  
 from app.constant import EMAIL_THRESHOLD
+from app.schema import AgentOutput, EmailGraphState, FinalDecision, AnalyzeEmailRequest
+from app.util import decide, extract_urls, html_to_text
+
 
 @dataclass
-class EmailOrchestrator():
-    graph: StateGraph = field(init=False)
+class EmailOrchestrator:
+    graph: Any = field(init=False)
 
     def __post_init__(self) -> None: 
         self.graph = self._build_graph()
     
-    def _build_graph(self) -> StateGraph: 
+    def _build_graph(self) -> Any:
         g = StateGraph(EmailGraphState)
 
         def start_node(state: EmailGraphState) -> Dict[str, Any]:
@@ -64,21 +64,21 @@ class EmailOrchestrator():
                 "headers_raw": state.get("headers_raw", ""),
                 "message_id": state.get("message_id", ""),
             }
-            model_response = email_remote_metadata_agent.run(meta_payload)
+            model_response = remote_metadata_agent.run(meta_payload)
             output = AgentOutput(agent="email_metadata_agent_remote", score=model_response.score, reasons=model_response.reasons)
             lst = list(state.get("meta_remote_output", []))
             lst.append(output)
             return {"meta_remote_output": lst}
         
         def remote_text_node(state: EmailGraphState) -> Dict[str, Any]:
-            model_response = email_remote_text_agent.run(state.get("subject", ""), state.get("_text_", ""))
+            model_response =  remote_text_agent.run(state.get("subject", ""), state.get("_text_", ""))
             output = AgentOutput(agent="email_text_agent_remote", score=model_response.score, reasons=model_response.reasons)
             lst = list(state.get("text_remote_output", []))
             lst.append(output)
             return {"text_remote_output": lst}
 
         def remote_url_node(state: EmailGraphState) -> Dict[str, Any]:
-            model_response = email_remote_url_agent.run(state.get("_urls_", []))
+            model_response =  remote_url_agent.run(state.get("_urls_", []))
             output = AgentOutput(agent="email_url_agent_remote", score=model_response.score, reasons=model_response.reasons)
             lst = list(state.get("url_remote_output", []))
             lst.append(output)
@@ -99,7 +99,7 @@ class EmailOrchestrator():
         g.add_node("text", text_node)
         g.add_node("url", url_node)
         g.add_node("local_aggregate", local_aggregate_node)
-        g.add_node("finalize_local", finalize_local_node)
+        g.add_node("finalize", finalize_local_node)
 
         g.add_node("remote_start", remote_start_node)
         g.add_node("remote_text", remote_text_node)
@@ -120,19 +120,36 @@ class EmailOrchestrator():
             "local_aggregate",
             conditional_edge,
             {
-                "accept": "finalize_local",
+                "accept": "finalize",
                 "escalate": "remote_start",
             },
         )
 
         g.add_edge("remote_start", "remote_text")
-        g.add_edge("remote_start", "remote_url")
-        g.add_edge("remote_start", "remote_metadata")
-        g.add_edge("remote_text", "remote_aggregate")
-        g.add_edge("remote_url", "remote_aggregate")
+        g.add_edge("remote_text", "remote_url")
+        g.add_edge("remote_url", "remote_metadata")
         g.add_edge("remote_metadata", "remote_aggregate")
 
-        g.add_edge("finalize_local", END)
-        g.add_edge("remote_aggregate", END)
+        g.add_edge("remote_aggregate", "finalize")
+        g.add_edge("finalize", END)
 
-        return g
+        return g.compile()
+
+    def analyze(self, req: AnalyzeEmailRequest) -> FinalDecision:
+        initial: EmailGraphState = {
+            "message_id": req.message_id,
+            "headers_raw": req.headers_raw or "",
+            "subject": req.subject or "",
+            "body_html": req.body_html,
+            "body_text": req.body_text,
+        }
+
+        state = self.graph.invoke(initial)
+        if not isinstance(state, dict):
+            raise RuntimeError("LangGraph returned unexpected state type")
+
+        decision = state.get("decision")
+        if isinstance(decision, FinalDecision):
+            return decision
+
+        raise RuntimeError("Graph execution did not produce a FinalDecision")

@@ -1,10 +1,6 @@
 from typing import TypedDict
-from pydantic import BaseModel
+from pydantic import BaseModel, Field
 from typing import List, Dict, Any, Optional
-
-class AnalyzeCallRequest(BaseModel):
-    thread_id: str
-    call_content: str
 
 class ModelOutput(BaseModel):
     score: float
@@ -14,7 +10,7 @@ class AgentOutput(BaseModel):
     agent: str
     score: float
     reasons: List[str]
-    features: Dict[str, Any] = {}
+    features: Dict[str, Any] = Field(default_factory=dict)
 
 class FinalDecision(BaseModel):
     risk_label: str
@@ -30,7 +26,7 @@ class EmailGraphState(TypedDict, total=False):
     subject: str
     body_html: Optional[str]
     body_text: Optional[str]
-    metadata: Dict[str, Any] = {}
+    metadata: Dict[str, Any]
 
     # derived/intermediate
     _text_: str

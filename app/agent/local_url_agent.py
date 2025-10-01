@@ -1,5 +1,5 @@
 from transformers import pipeline 
-from app.schemas import AgentOutput, Span
+from app.schema import AgentOutput
 
 url_clf = pipeline("text-classification", model="Eason918/malicious-url-detector-v2")
 
