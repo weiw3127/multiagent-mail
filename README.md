@@ -1,6 +1,9 @@
-# mailMAS
+# MultiPhishGuard
 
-mailMAS is a multi-agent email security service that scores inbound messages for phishing risk. It combines open-source Hugging Face classifiers with Google Gemini models orchestrated through a LangGraph state machine to deliver fast local heuristics and deeper remote analysis when the risk score warrants escalation.
+This repository reproduces the multi-agent system raised by MultiPhishGuard (Xue, Spero, Koh, & Russello, 2025). The MultiPhishGuard is a multi-agent email security service that scores inbound messages for phishing risk. It combines open-source Hugging Face classifiers with Google Gemini models orchestrated through a LangGraph state machine to deliver fast local heuristics and deeper remote analysis when the risk score warrants escalation.
+
+![MultiPhishGuard architecture](multiPhishGuard.jpeg)
+
 
 ## Key Features
 - Multi-stage phishing detection that escalates from local transformers to Gemini 2.5 evaluations when confidence is low.
@@ -92,9 +95,12 @@ Execute the pytest suite to verify the LangGraph wiring and decision logic:
 pytest
 ```
 
-## Extending mailMAS
+## Extending MultiPhishGuard
 - Add new agents by implementing a `run(...)` function under `app/agent/` and attaching it in `EmailOrchestrator._build_graph`.
 - Swap the default Gemini model by changing the `ChatGoogleGenerativeAI` configuration in the remote agents.
 - Replace Hugging Face classifiers with internal models by editing `local_text_agent.py` and `local_url_agent.py`.
+
+## References
+* Xue, Y., Spero, E., Koh, Y. S., & Russello, G. (2025). MultiPhishGuard: An LLM-based multi-agent system for phishing email detection. arXiv preprint arXiv:2505.23803. https://doi.org/10.48550/arXiv.2505.23803
 
 
